@@ -1,5 +1,6 @@
 package com.marco.rabbitmq;
 
+import com.marco.rabbitmq.pojo.SimpleMessage;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -18,6 +19,10 @@ public class RabbitmqdemoApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        rabbitTemplate.convertAndSend("TestExchange", "testRouting", "Hello RabbitMQ, this is the testing from TestExchange via TestQueue to the consumer");
+
+        SimpleMessage simpleMessage = new SimpleMessage("FirstMessage", "This is a simple description");
+
+        //rabbitTemplate.convertAndSend("TestExchange", "testRouting", simpleMessage.toString());
+        rabbitTemplate.convertAndSend("TestExchange", "testRouting", simpleMessage);
     }
 }
