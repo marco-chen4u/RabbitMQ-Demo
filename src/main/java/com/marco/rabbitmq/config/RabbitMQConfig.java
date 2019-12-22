@@ -1,8 +1,7 @@
 package com.marco.rabbitmq.config;
 
 import com.marco.rabbitmq.listener.RabbitMQMessageListener;
-import org.omg.PortableInterceptor.USER_EXCEPTION;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.MessageListenerContainer;
@@ -21,13 +20,32 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
     // fields
+    private final String CURRENT_EXCHANGE = "RoutedExchange";
+    //private final String CURRENT_BINDING = "";
+    private final String CURRENT_ROUTING_KEY = "routedTopic";// routing key, message grouping
     private final String CURRENT_QUEUE = "RoutedQueue";
     private final String HOST_NAME = "localhost";
     private final String USER_NAME = "guest";
     private final String PASSWORD = "guest";
 
     @Bean
-    public Queue getQueue() {
+    public Exchange getRoutedExchange() {
+        return ExchangeBuilder.topicExchange(CURRENT_EXCHANGE)
+                .durable(true)
+                .build();
+    }
+
+    @Bean
+    public Binding getRoutedBinding() {
+        return BindingBuilder
+                .bind(getRoutedQueue())
+                .to(getRoutedExchange())
+                .with(CURRENT_ROUTING_KEY)
+                .noargs();
+    }
+
+    @Bean
+    public Queue getRoutedQueue() {
         return new Queue(CURRENT_QUEUE, true);
     }
 
@@ -43,7 +61,7 @@ public class RabbitMQConfig {
     MessageListenerContainer getMessageListenerContainer() {
         SimpleMessageListenerContainer simpleMessageListenerContainer = new SimpleMessageListenerContainer();
         simpleMessageListenerContainer.setConnectionFactory(getConnectionFactory());
-        simpleMessageListenerContainer.setQueues(getQueue()); // it could add more than 1 queues
+        simpleMessageListenerContainer.setQueues(getRoutedQueue()); // it could add more than 1 queues
         simpleMessageListenerContainer.setMessageListener(new RabbitMQMessageListener());
         return simpleMessageListenerContainer;
     }
